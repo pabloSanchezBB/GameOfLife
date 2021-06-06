@@ -10,8 +10,9 @@ public class Board
      * Fields:
      */
     boolean[][] board2D; //2D Representation of the Board
-    boolean[][][] board3D; //3D Representation of the Board
-    int lenX, lenY, lenZ; //x, y and z dimensions of the board
+    //boolean[][][] board3D; //3D Representation of the Board
+    int lenX, lenY; //x and y dimensions of the board
+    //int lenZ; //z dimensions of the board
 
     /**
      * Constructors:
@@ -21,10 +22,7 @@ public class Board
         this.board2D = board2D;
     }
 
-    public Board(boolean[][][] board3D)
-    {
-        this.board3D = board3D;
-    }
+    //public Board(boolean[][][] board3D) { this.board3D = board3D; }
 
     /**
      * Constructor to create a 2D Board From a Filename that represents a .txt file with the board
@@ -42,26 +40,24 @@ public class Board
      */
     public Board(String filename) //this won't work, remake with 2 scanners, one for the row and another to scan each row
     {
+
         try{
             File f = new File(filename);
-            Scanner sc = new Scanner(f);
+            Scanner gridSize = new Scanner(f); //scanner to pull the first line of ints
 
-            lenX = sc.nextInt();
-            lenY = sc.nextInt();
+            lenX = gridSize.nextInt(); //take in the number of rows
+            lenY = gridSize.nextInt(); //take in the number of columns
 
-            board2D = new boolean[lenX][lenY];
+            gridSize.close(); //close the scanner
 
-            String row;
+            Scanner gridScan = new Scanner(f);
+            for(int i=0;i<lenX;++i){
+                String s = gridScan.nextLine();
 
-            for(int i=0; i<lenX;++i){
-                 row = sc.nextLine();
-
-                for(int j=0;j<row.length();++j){
-                    if(row.charAt(j) != ' '){
-                        if(row.charAt(j) == 'T') board2D[i][j/2] = true;
-                        else if(row.charAt(j) == 'F') board2D[i][j/2] = false;
-                        else throw new IllegalArgumentException();
-                    }
+                for(int j=0;j<s.length();++j){
+                    if(s.charAt(j) == 'T') board2D[i][j/2] = true;
+                    else if(s.charAt(j) == 'F') board2D[i][j/2] = false;
+                    else if(s.charAt(j) == ' ');
                 }
             }
 
@@ -71,7 +67,6 @@ public class Board
             System.out.println("File Format is Incorrect, Cells must be Populated by Either T or F");
             e.printStackTrace();
         }
-
     }
 
     /**
@@ -84,9 +79,19 @@ public class Board
      */
     public void updateBoard2D()
     {
+        int numLive;
+
         for(int i=0;i<lenX;++i){
             for(int j=0;j<lenY;++j){
+                numLive = findLiveNeighbors(i,j);
 
+                if(board2D[i][j] == true){
+                    if(numLive < 2) board2D[i][j] = false;
+                    else if(numLive == 2 || numLive == 3) board2D[i][j] = true;
+                    else if(numLive > 3) board2D[i][j] = true;
+                } else {
+                    if(numLive == 3) board2D[i][j] = true;
+                }
             }
         }
     }
@@ -104,45 +109,120 @@ public class Board
         int numLiving=0;
 
         if(x==0 && y==0) { //upper left corner
-            //TODO: Search the [x+1][y], [x][y+1] and [x+1][y+1] cells
-            for(int i=0;i<=1;++i){ //rows
-                for(int j=0;j<=1;++j){ //cols
-                    if(i==0 && j==0); //skip at (0,0)
+            //TODO: Search the (x+1,y), (x+1,y+1) and (x,y+1) cells
+            for(int i=0;i<2;++i){
+                for(int j=0;j<2;++j){
+                    if(i==0 && j==0);
                     else{
-                        if(board2D[x+i][y+j] == true) numLiving++;
+                        if(board2D[x+i][y+j] == false) numLiving++;
                     }
                 }
             }
         } else if(x==lenX-1 && y==0){ //lower left corner
-            //TODO: Search the [x+1][y], [x][y-1] and [x+1][y-1] cells
-            for(int i=0;i<=1;++i){ //rows
-                for(int j=0;j<=1;++j){ //cols
-                    if(i==x && j==y); //skip at (lenX, 0)
+            //TODO: Search the (x+1,y), (x,y-1) and (x+1,y-1) cells
+            for(int i=0;i<2;++i){
+                for(int j=0;j<2;++j){
+                    if(i==0 && j==0);
                     else{
-                        if(board2D[x+i][y-j] == true) numLiving++;
+                        if(board2D[x-i][y-j] == false) numLiving++;
                     }
                 }
             }
         } else if(x==0 && y==lenY-1){ //upper right corner
-            //TODO: Find [x][y-1], [x+1][y-1] and [x+1][y] cells
-            for(int i=0;i<=1;++i){ //rows
-                for(int j=0;j<=1;++j){ //cols
-                    if(i==)
+            //TODO: Find (x,y-1), (x+1,y-1) and (x+1,y) cells
+            for(int i=0;i<2;++i){
+                for(int j=0;j<2;++j){
+                    if(i==0 && j==0);
+                    else{
+                        if(board2D[x+i][y-j] == false) numLiving++;
+                    }
                 }
             }
         } else if(x==lenX-1 &&y==lenY-1){ //lower right corner
-            //TODO: Find [x][y-1], [x-1][y-1] and [x-1][y] cells
+            //TODO: Find (x,y-1), (x-1,y-1) and (x-1,y) cells
+            for(int i=0;i<2;++i){
+                for(int j=0;j<2;++j){
+                    if(i==0 && j==0);
+                    else{
+                        if(board2D[x-i][y+j] == false) numLiving++;
+                    }
+                }
+            }
         } else if(y==0 && (x!=0 || x!=lenX-1)){ //left edge
-            //TODO: Find [x-1][y], [x-1][y+1], [x][y+1], [x+1][y+1] and [x+1][y] cells
+            //TODO: Find (x-1,y), (x-1,y+1), (x,y+1), (x+1,y+1) and (x+1,y) cells
+            for(int i=-1;i<2;++i){
+                for(int j=0;j<2;++j){
+                    if(i==0 && j==0);
+                    else{
+                        if(board2D[x+i][y+j] == false) numLiving++;
+                    }
+                }
+            }
         } else if(y==lenY-1 && (x!=0 || x!=lenX-1)){ //right edge
-            //TODO: Find [x-1][y], [x-1][y-1], [x][y-1], [x+1][y-1] and [x+1][y-1] cells
+            //TODO: Find (x-1,y), (x-1,y-1), (x,y-1), (x+1,y-1) and (x+1,y-1) cells
+            for(int i=-1;i<2;++i){
+                for(int j=0;j<2;++j){
+                    if(i==0 && j==0);
+                    else{
+                        if(board2D[x+i][y-j] == false) numLiving++;
+                    }
+                }
+            }
         }else if(x==0 && (y!=0 || y!=lenY-1)){ //top edge
-            //TODO: Find [x][y-1], [x+1][y-1], [x+1][y], [x+1][y+1] and [x][y+1] cells
+            //TODO: Find (x,y-1), (x+1,y-1), (x+1,y), (x+1,y+1) and (x,y+1) cells
+            for(int i=0;i<2;++i){
+                for(int j=-1;j<2;++j){
+                    if(i==0 && j==0);
+                    else{
+                        if(board2D[x+i][y+j] == false) numLiving++;
+                    }
+                }
+            }
         }else if(x==lenX-1 && (y!=0 || y!=lenY-1)){ //bottom edge
-            //TODO: Find [x-1][y], [x-1][y-1], [x][y-1], [x+1][y-1] and [x+1][y] cells
+            //TODO: Find (x-1,y), (x-1,y-1), (x,y-1), (x+1,y-1) and (x+1,y) cells
+            for(int i=0;i<2;++i){
+                for(int j=-1;j<2;++j){
+                    if(i==0 && j==0);
+                    else{
+                        if(board2D[x-i][y+j] == false) numLiving++;
+                    }
+                }
+            }
         } else{ //normal cell
             //TODO: Find all Neighbors
+            for(int i=-1;i<2;++i){
+                for(int j=-1;j<2;++j){
+                    if(i==0 && j==0);
+                    else{
+                        if(board2D[x+i][y+j] == false) numLiving++;
+                    }
+                }
+            }
         }
         return numLiving;
+    }
+
+    public String toString()
+    {
+        String s = lenX + " " + lenY + "\n";
+        for(int i=0;i<lenX;++i){
+            for(int j=0;j<lenY;++j){
+                if(board2D[i][j] == true) s += "T ";
+                else s += "F ";
+            }
+            s += "\n";
+        }
+
+        return s;
+    }
+
+    public int getLenX()
+    {
+        return lenX;
+    }
+
+    public int getLenY()
+    {
+        return lenY;
     }
 }
